@@ -3,9 +3,11 @@ const cityInput = document.querySelector(".cityinput");
 const card = document.querySelector(".card");
 const apikey = "c28dca8790c3a91e7fb0541d993287bb";
 
+
 let nextHours = [];
 let nextTemp =[];
 let mychartinstance =null;
+
 
 weatherForm.addEventListener("submit", async event => {
     event.preventDefault();
@@ -14,9 +16,11 @@ weatherForm.addEventListener("submit", async event => {
         try{
             const weatherData = await getWeatherData(city);
             displayWeatherInfo(weatherData);
+            putbackgroundImg(weatherData.current.weather[0].id, calculatedayornight(weatherData));
             fetchtemperature(weatherData.nexthours);
             mygraph(nextHours, nextTemp);
             nextdaysinfo(weatherData.nextdays);
+            calculatehour(weatherData);
 
         }catch(error){
             console.error(error);
@@ -66,6 +70,7 @@ async function getWeatherData(city){
 }
 
 function displayWeatherInfo(data){
+    console.log(data);
     const{name:city, 
           main:{temp, humidity},
           weather:[{description, id}]} = data.current;
@@ -144,8 +149,8 @@ function mygraph(nextHours, nextTemp){
     labels: nextHours,
     datasets: [{
       label: 'Weather next 24 hours',
-      backgroundColor: 'rgb(255, 99, 132)',
-      borderColor: 'rgb(255, 99, 132)',
+      backgroundColor: 'rgba(104, 99, 255, 1)',
+      borderColor: 'rgba(104, 99, 255, 1)',
       data: nextTemp,
     }]
   };
@@ -209,6 +214,65 @@ function nextdaysinfo(forecastDays, containerId){
 
 }
 
+//vendosja e cfare backgroundi duhet 
+function putbackgroundImg(weatherId , isday){
+    const body = document.getElementsByTagName("body")[0];
+    const ora = new Date().getHours();
+    console.log(ora);
+    console.log(weatherId);
+    switch(true){
+         case(weatherId >= 200 && weatherId < 300):
+            body.style.backgroundImage= !isday ? "url('backgroundimages/stormnight.jpg')" :"url('backgroundimages/storm.jpg')";
+            break;   
+        case(weatherId >= 300 && weatherId < 400):
+            body.style.backgroundImage= !isday ? "url('backgroundimages/rainnight.png')" :"url('backgroundimages/rainyday.jpeg')";
+            break;
+        case(weatherId >= 500 && weatherId < 600):
+            body.style.backgroundImage= !isday ? "url('backgroundimages/rainnight.png')" :"url('backgroundimages/rainyday.jpeg')";
+            break;
+        case(weatherId >= 600 && weatherId < 700):
+            body.style.backgroundImage= !isday ? "url('backgroundimages/snowynight.jpg')" :"url('backgroundimages/snowyday.jpg')";
+            break;        
+        case(weatherId >= 700 && weatherId < 800):
+            body.style.backgroundImage= !isday ? "url('backgroundimages/snowynight.jpg')" :"url('backgroundimages/snowyday.jpg')";
+            break;
+        case(weatherId === 800):
+            body.style.backgroundImage= !isday ? "url('backgroundimages/clearskynight.jpg')" :"url('backgroundimages/sunny.webp')";
+            break;
+        case(weatherId > 800 && weatherId < 900):
+            body.style.backgroundImage= !isday ? "url('backgroundimages/cloudynight.jpg')" :"url('backgroundimages/cloudy.jpg')";
+            break;
+        default:
+            body.style.backgroundImage = "url('backgroundimages/deafuly.jpeg')";
+    }
 
+}
+//gjejm sa do jete ora aktuale ne cdo vend qe ne kerkojm
+ function calculatehour(weatherData){
+    //marrim timezone nga appi
+    const timezone = weatherData.current.timezone;
+    //gettimezoneoffset trg sa ndryshon ora jon me boshtin 0
+    const oraneboshtin0 = Date.now() +(new Date().getTimezoneOffset()*60000);
 
+    const oraqedua= new Date(oraneboshtin0 + timezone*1000);
+    const ora = oraqedua.getHours();
+    console.log(ora);
+    return ora ;
+ }
+
+ //funksion per llogaritjen e perendimit dhee lindjes se diellit
+ function calculatedayornight(weatherData ){
+    const sunrise = weatherData.current.sys.sunrise;
+    const sunset= weatherData.current.sys.sunset;
+    const timezone = weatherData.current.timezone;
+//shumezimi me 1000 e bejme sps jan ne sek
+    const sunrisetime = new Date((sunrise+timezone)*1000);
+    const sunsettime = new Date((sunset+timezone)*1000);
+    const sunrisehour = sunrisetime.getHours();
+    const sunsethour= sunsettime.getHours();
+    const ora_aktuale = calculatehour(weatherData);
+    const isday= (ora_aktuale >=sunrisehour && ora_aktuale<sunsethour);
+    console.log(isday);
+    return isday;
+  }
 
