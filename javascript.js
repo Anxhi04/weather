@@ -16,7 +16,7 @@ weatherForm.addEventListener("submit", async event => {
         try{
             const weatherData = await getWeatherData(city);
             displayWeatherInfo(weatherData);
-            putbackgroundImg(weatherData.current.weather[0].id, calculatedayornight(weatherData));
+            putbackgroundImg(weatherData.current.weather[0].id, weatherData);
             fetchtemperature(weatherData.nexthours);
             mygraph(nextHours, nextTemp);
             nextdaysinfo(weatherData.nextdays);
@@ -215,38 +215,60 @@ function nextdaysinfo(forecastDays, containerId){
 }
 
 //vendosja e cfare backgroundi duhet 
-function putbackgroundImg(weatherId , isday){
+function putbackgroundImg(weatherId, weatherData) {
     const body = document.getElementsByTagName("body")[0];
-    const ora = new Date().getHours();
-    console.log(ora);
-    console.log(weatherId);
-    switch(true){
-         case(weatherId >= 200 && weatherId < 300):
-            body.style.backgroundImage= !isday ? "url('backgroundimages/stormnight.jpg')" :"url('backgroundimages/storm.jpg')";
-            break;   
-        case(weatherId >= 300 && weatherId < 400):
-            body.style.backgroundImage= !isday ? "url('backgroundimages/rainnight.png')" :"url('backgroundimages/rainyday.jpeg')";
-            break;
-        case(weatherId >= 500 && weatherId < 600):
-            body.style.backgroundImage= !isday ? "url('backgroundimages/rainnight.png')" :"url('backgroundimages/rainyday.jpeg')";
-            break;
-        case(weatherId >= 600 && weatherId < 700):
-            body.style.backgroundImage= !isday ? "url('backgroundimages/snowynight.jpg')" :"url('backgroundimages/snowyday.jpg')";
-            break;        
-        case(weatherId >= 700 && weatherId < 800):
-            body.style.backgroundImage= !isday ? "url('backgroundimages/snowynight.jpg')" :"url('backgroundimages/snowyday.jpg')";
-            break;
-        case(weatherId === 800):
-            body.style.backgroundImage= !isday ? "url('backgroundimages/clearskynight.jpg')" :"url('backgroundimages/sunny.webp')";
-            break;
-        case(weatherId > 800 && weatherId < 900):
-            body.style.backgroundImage= !isday ? "url('backgroundimages/cloudynight.jpg')" :"url('backgroundimages/cloudy.jpg')";
-            break;
-        default:
-            body.style.backgroundImage = "url('backgroundimages/deafuly.jpeg')";
-    }
 
+    const dayNightInfo = calculatedayornight(weatherData);
+    const isday = dayNightInfo.isday;
+    const sunrisehour = dayNightInfo.sunrisehour;
+    const sunsethour = dayNightInfo.sunsethour;
+
+    const durationInfo = calculatesunrisesunsetduration(weatherData.current.coord.lat);
+    const sunriseDuration = durationInfo.sunriseDuration; 
+    const sunsetDuration = durationInfo.sunsetDuration;   
+
+    const now = new Date();
+    const oraAktuale = now.getHours() * 60 + now.getMinutes();
+
+    const sunriseStart = sunrisehour * 60;
+    const sunriseEnd = sunriseStart + sunriseDuration;
+
+    const sunsetStart = sunsethour * 60;
+    const sunsetEnd = sunsetStart + sunsetDuration;
+
+    if (weatherId === 800 && oraAktuale >= sunriseStart && oraAktuale <= sunriseEnd) {
+        body.style.backgroundImage = "url('backgroundimages/sunrise.jpeg')";
+    } else if (weatherId === 800 && oraAktuale >= sunsetStart && oraAktuale <= sunsetEnd) {
+        body.style.backgroundImage = "url('backgroundimages/sunset.jpeg')";
+    } else {
+        switch (true) {
+            case (weatherId >= 200 && weatherId < 300):
+                body.style.backgroundImage = isday ? "url('backgroundimages/storm.jpeg')" : "url('backgroundimages/stormnight.jpeg')";
+                break;
+            case (weatherId >= 300 && weatherId < 400):
+                body.style.backgroundImage = isday ? "url('backgroundimages/rainday.jpeg')" : "url('backgroundimages/rainnight.jpeg')";
+                break;
+            case (weatherId >= 500 && weatherId < 600):
+                body.style.backgroundImage = isday ? "url('backgroundimages/rainday.jpeg')" : "url('backgroundimages/rainnight.jpeg')";
+                break;
+            case (weatherId >= 600 && weatherId < 700):
+                body.style.backgroundImage = isday ? "url('backgroundimages/snowday.jpeg')" : "url('backgroundimages/snownight.jpeg')";
+                break;
+            case (weatherId >= 700 && weatherId < 800):
+                body.style.backgroundImage = isday ? "url('backgroundimages/snowday.jpeg')" : "url('backgroundimages/snownight.jpeg')";
+                break;
+            case (weatherId === 800):
+                body.style.backgroundImage = isday ? "url('backgroundimages/sunny.jpeg')" : "url('backgroundimages/clearskynight.jpeg')";
+                break;
+            case (weatherId > 800 && weatherId < 900):
+                body.style.backgroundImage = isday ? "url('backgroundimages/cloudysky.jpeg')" : "url('backgroundimages/cloudyskynight.jpeg')";
+                break;
+            default:
+                body.style.backgroundImage = "url('backgroundimages/default.jpeg')";
+        }
+    }
 }
+
 //gjejm sa do jete ora aktuale ne cdo vend qe ne kerkojm
  function calculatehour(weatherData){
     //marrim timezone nga appi
@@ -273,6 +295,35 @@ function putbackgroundImg(weatherId , isday){
     const ora_aktuale = calculatehour(weatherData);
     const isday= (ora_aktuale >=sunrisehour && ora_aktuale<sunsethour);
     console.log(isday);
-    return isday;
+    return{ 
+        isday,
+        sunsethour,
+        sunrisehour
+
+    }
   }
+//funksion per llogaritjen e dites e cila na duhet per sunsetsunrise time 
+function calculatedayofyear(){
+    const date= new Date();
+    const start = new Date(date.getFullYear(), 0, 0);//dita 0 
+    const diff= date- start; //diferebnca ne milisekonda nga fillimi viti der tani
+    const ms1day= 1000*60*60*24;
+    return Math.floor(diff/ms1day); //na jep diten 
+}
+function calculatesunrisesunsetduration(lat) {
+    const sunAngularDiameter = 0.53; // ° 
+    const sunSpeed = 15; // ° per hour
+
+    // Kohezgjatja e lindjes/perëndimit në orë
+    const durationHours = sunAngularDiameter / (sunSpeed * Math.cos(lat * Math.PI / 180));
+
+    // Konverto në minuta
+    const durationMinutes = durationHours * 60;
+
+    return {
+        sunriseDuration: durationMinutes,
+        sunsetDuration: durationMinutes
+    };
+}
+
 
