@@ -216,7 +216,7 @@ function nextdaysinfo(forecastDays, containerId){
 
 //vendosja e cfare backgroundi duhet 
 function putbackgroundImg(weatherId, weatherData) {
-    const body = document.getElementsByTagName("body")[0];
+    const overlay = document.getElementById("background-overlay");
 
     const dayNightInfo = calculatedayornight(weatherData);
     const isday = dayNightInfo.isday;
@@ -236,38 +236,35 @@ function putbackgroundImg(weatherId, weatherData) {
     const sunsetStart = sunsethour * 60;
     const sunsetEnd = sunsetStart + sunsetDuration;
 
+    let imgUrl = "backgroundimages/default.jpeg"; // default
+
     if (weatherId === 800 && oraAktuale >= sunriseStart && oraAktuale <= sunriseEnd) {
-        body.style.backgroundImage = "url('backgroundimages/sunrise.jpeg')";
+        imgUrl = "backgroundimages/sunrise.jpeg";
     } else if (weatherId === 800 && oraAktuale >= sunsetStart && oraAktuale <= sunsetEnd) {
-        body.style.backgroundImage = "url('backgroundimages/sunset.jpeg')";
+        imgUrl = "backgroundimages/sunset.jpeg";
     } else {
         switch (true) {
             case (weatherId >= 200 && weatherId < 300):
-                body.style.backgroundImage = isday ? "url('backgroundimages/storm.jpeg')" : "url('backgroundimages/stormnight.jpeg')";
+                imgUrl = isday ? "backgroundimages/storm.jpeg" : "backgroundimages/stormnight.jpeg";
                 break;
-            case (weatherId >= 300 && weatherId < 400):
-                body.style.backgroundImage = isday ? "url('backgroundimages/rainday.jpeg')" : "url('backgroundimages/rainnight.jpeg')";
+            case (weatherId >= 300 && weatherId < 600):
+                imgUrl = isday ? "backgroundimages/rainday.jpeg" : "backgroundimages/rainnight.jpeg";
                 break;
-            case (weatherId >= 500 && weatherId < 600):
-                body.style.backgroundImage = isday ? "url('backgroundimages/rainday.jpeg')" : "url('backgroundimages/rainnight.jpeg')";
-                break;
-            case (weatherId >= 600 && weatherId < 700):
-                body.style.backgroundImage = isday ? "url('backgroundimages/snowday.jpeg')" : "url('backgroundimages/snownight.jpeg')";
-                break;
-            case (weatherId >= 700 && weatherId < 800):
-                body.style.backgroundImage = isday ? "url('backgroundimages/snowday.jpeg')" : "url('backgroundimages/snownight.jpeg')";
+            case (weatherId >= 600 && weatherId < 800):
+                imgUrl = isday ? "backgroundimages/snowday.jpeg" : "backgroundimages/snownight.jpeg";
                 break;
             case (weatherId === 800):
-                body.style.backgroundImage = isday ? "url('backgroundimages/sunny.jpeg')" : "url('backgroundimages/clearskynight.jpeg')";
+                imgUrl = isday ? "backgroundimages/sun.jpeg" : "backgroundimages/clearskynight.jpeg";
                 break;
             case (weatherId > 800 && weatherId < 900):
-                body.style.backgroundImage = isday ? "url('backgroundimages/cloudysky.jpeg')" : "url('backgroundimages/cloudyskynight.jpeg')";
+                imgUrl = isday ? "backgroundimages/cloudysky.jpeg" : "backgroundimages/cloudyskynight.jpeg";
                 break;
-            default:
-                body.style.backgroundImage = "url('backgroundimages/default.jpeg')";
         }
     }
+
+    overlay.style.backgroundImage = `url('${imgUrl}')`;
 }
+
 
 //gjejm sa do jete ora aktuale ne cdo vend qe ne kerkojm
  function calculatehour(weatherData){
