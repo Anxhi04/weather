@@ -2,11 +2,15 @@ const weatherForm = document.querySelector(".weatherForm");
 const cityInput = document.querySelector(".cityinput");
 const card = document.querySelector(".card");
 const apikey = "c28dca8790c3a91e7fb0541d993287bb";
-
+const button = document.getElementById("btn");
+const cityin = document.getElementById("city");
+const graph = document.getElementById("myChart");
+const dayscontainer = document.getElementById("forecastContainer");
 
 let nextHours = [];
 let nextTemp =[];
 let mychartinstance =null;
+
 
 
 weatherForm.addEventListener("submit", async event => {
@@ -70,6 +74,17 @@ async function getWeatherData(city){
 }
 
 function displayWeatherInfo(data){
+    button.style.background="#7a92aaff";
+    button.style.border="none";
+    cityin.style.border="1px solid white";
+    button.addEventListener("mouseenter", ()=>{
+        button.style.background="#91a0afff"
+    });
+    button.addEventListener("mouseleave", ()=>{
+    button.style.background="#7a92aaff";
+    });
+
+    
     console.log(data);
     const{name:city, 
           main:{temp, humidity},
@@ -135,6 +150,8 @@ function displayError(message){
     card.textContent = ""; 
     card.style.display="flex";
     card.appendChild(errorDisplay);
+    graph.style.display="none";
+    dayscontainer.style.display="none";
 }
 
 async function fetchtemperature(nexthours){
@@ -144,14 +161,26 @@ async function fetchtemperature(nexthours){
 }
 
 //Grafiku i oreve 
-function mygraph(nextHours, nextTemp){
+function mygraph(nextHours, nextTemp) {
+  const ctx = document.getElementById('myChart').getContext('2d');
+
+  const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+  gradient.addColorStop(0, 'rgba(0, 123, 255, 0.4)');
+  gradient.addColorStop(1, 'rgba(0, 123, 255, 0)');
+
   const data = {
     labels: nextHours,
     datasets: [{
       label: 'Weather next 24 hours',
-      backgroundColor: 'rgba(104, 99, 255, 1)',
-      borderColor: 'rgba(104, 99, 255, 1)',
       data: nextTemp,
+      borderColor: 'rgba(0, 150, 255, 1)',  
+      backgroundColor: gradient,             
+      borderWidth: 3,
+      tension: 0.4,                          
+      pointBackgroundColor: '#fff',          
+      pointBorderColor: 'rgba(0, 150, 255, 1)',
+      pointRadius: 4,
+      pointHoverRadius: 6
     }]
   };
 
@@ -159,34 +188,59 @@ function mygraph(nextHours, nextTemp){
     type: 'line',
     data,
     options: {
+      responsive: true,
       plugins: {
+        title: {
+          display: true,
+          font: {
+            size: 18,
+            weight: 'bold'
+          },
+          color: '#fff'  
+        },
+        legend: {
+          labels: {
+            color: '#fff' 
+          }
+        },
         tooltip: {
           callbacks: {
-            label: function(context) {
+            label: function (context) {
               return context.parsed.y + '°C';
             }
           }
         }
       },
       scales: {
+        x: {
+          ticks: {
+            color: '#fff' 
+          },
+          grid: {
+            display: false 
+          }
+        },
         y: {
           ticks: {
-            callback: function(value) {
+            color: '#fff', 
+            callback: function (value) {
               return value + '°C';
             }
+          },
+          grid: {
+            display: false
           }
         }
       }
     }
   };
-  if(mychartinstance){
+
+  if (mychartinstance) {
     mychartinstance.destroy();
   }
-  mychartinstance =  new Chart(
-    document.getElementById('myChart'),
-    config
-  );
+  mychartinstance = new Chart(ctx, config);
 }
+
 
 function nextdaysinfo(forecastDays, containerId){
     const container =document.getElementById("forecastContainer");
@@ -322,5 +376,6 @@ function calculatesunrisesunsetduration(lat) {
         sunsetDuration: durationMinutes
     };
 }
+
 
 
